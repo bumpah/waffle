@@ -67,8 +67,21 @@ defmodule Waffle.Actions.Store do
   defp put(definition, {%Waffle.File{} = file, scope}) do
     case definition.validate({file, scope}) do
       result when result == true or result == :ok ->
+        versions =
         put_versions(definition, {file, scope})
         |> cleanup!(file)
+
+        case versions do
+          {:ok, _} = result ->
+            result
+
+          {:error, messages} when is_list(messages) ->
+            [message | _] = messages
+            {:error, message}
+
+          {:error, message} ->
+            {:error, message}
+        end
 
       {:error, message} ->
         {:error, message}
